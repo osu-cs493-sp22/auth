@@ -12,6 +12,7 @@
   "author": "Hess <hessro@oregonstate.edu>",
   "license": "MIT",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "express": "^4.18.1",
     "mongodb": "^4.5.0",
     "morgan": "^1.10.0"

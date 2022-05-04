@@ -2,6 +2,7 @@
 * API routes for 'users' collection.
 */
 
+const bcrypt = require('bcryptjs')
 const router = require('express').Router()
 
 const { validateAgainstSchema } = require('../lib/validation')
@@ -16,6 +17,27 @@ router.post('/', async function (req, res) {
     } else {
         res.status(400).send({
             error: "Request body does not contain a valid User."
+        })
+    }
+})
+
+router.post('/login', async function (req, res) {
+    if (req.body && req.body.id && req.body.password) {
+        const user = await getUserById(req.body.id, true)
+        const authenticated = user && await bcrypt.compare(
+            req.body.password,
+            user.password
+        )
+        if (authenticated) {
+            res.status(200).send({})
+        } else {
+            res.status(401).send({
+                error: "Invalid credentials"
+            })
+        }
+    } else {
+        res.status(400).send({
+            error: "Request needs user ID and password."
         })
     }
 })
