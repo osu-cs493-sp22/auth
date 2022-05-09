@@ -7,6 +7,7 @@ const router = require('express').Router()
 
 const { validateAgainstSchema } = require('../lib/validation')
 const { UserSchema, insertNewUser, getUserById } = require('../models/user')
+const { generateAuthToken, requireAuthentication } = require('../lib/auth')
 
 router.post('/', async function (req, res) {
     if (validateAgainstSchema(req.body, UserSchema)) {
@@ -29,7 +30,8 @@ router.post('/login', async function (req, res) {
             user.password
         )
         if (authenticated) {
-            res.status(200).send({})
+            const token = generateAuthToken(req.body.id)
+            res.status(200).send({ token: token })
         } else {
             res.status(401).send({
                 error: "Invalid credentials"
@@ -42,12 +44,21 @@ router.post('/login', async function (req, res) {
     }
 })
 
-router.get('/:id', async function (req, res, next) {
-    const user = await getUserById(req.params.id)
-    if (user) {
-        res.status(200).send(user)
-    } else {
+router.get('/:id', requireAuthentication, async function (req, res, next) {
+    console.log("== req.user:", req.user)
+    if (req.user !== req.params.id) {
+        // res.status(403).send({
+        //     err: "Unauthorized to access the specified resource"
+        // })
         next()
+    } else {
+        const user = await getUserById(req.params.id)
+        console.log("== req.headers:", req.headers)
+        if (user) {
+            res.status(200).send(user)
+        } else {
+            next()
+        }
     }
 })
 
